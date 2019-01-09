@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
+import net.kzn.shoppingbackend.dto.Category;
 import net.kzn.shoppingbackend.dto.Product;
 
 
@@ -16,7 +17,8 @@ public class ProductDAOImpl implements ProductDAO {
 
 	@Autowired
 	private SessionFactory sessionFactory;
-	
+	@Autowired
+	private CategoryDAO categoryDAO;
 	/*
 	 * SINGLE
 	 * */
@@ -128,6 +130,41 @@ public class ProductDAOImpl implements ProductDAO {
 							.setFirstResult(0)
 							.setMaxResults(count)
 								.getResultList();					
+	}
+    
+	@Override
+	public List<Product> getLatestTrendingProducts(int count) {
+		return sessionFactory
+				.getCurrentSession()
+					.createQuery("FROM Product WHERE active = :active ORDER BY views DESC", Product.class)
+						.setParameter("active", true)
+							.setFirstResult(0)
+							.setMaxResults(count)
+								.getResultList();					
+	}
+
+	@Override
+	public List<Product> getCategoryProducts(String query) {
+		Category category=null;
+		   
+		    if(query!=null) {
+		    	 query.replaceAll("\\s","");
+		     query= query.toLowerCase();
+		       
+		    	category = categoryDAO.getCategoryByName(query);
+		    	if(query.endsWith("s")) {
+		    	     String secondQuery = query.substring(0, query.length()-1);
+		    	      if(category==null) {
+		    	    	   category=categoryDAO.getCategoryByName(secondQuery);		    	    	   
+		    	      }
+		    	}		    	
+		    }
+		      if(category==null) {
+		    	  return null;
+		      }
+		      else {
+		    	   return listActiveProductsByCategory(category.getId());
+		      } 		  		   		
 	}
 
 }

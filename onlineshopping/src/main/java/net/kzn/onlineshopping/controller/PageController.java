@@ -1,11 +1,20 @@
 package net.kzn.onlineshopping.controller;
 
+import java.util.List;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 
 import net.kzn.onlineshopping.exception.ProductNotFoundException;
@@ -26,18 +35,26 @@ public class PageController {
 	private ProductDAO productDAO;
 	
 	@RequestMapping(value = {"/", "/home", "/index"})
-	public ModelAndView index() {		
-		ModelAndView mv = new ModelAndView("page");		
-		mv.addObject("title","Home");
-		
-		logger.info("Inside PageController index method - INFO");
-		logger.debug("Inside PageController index method - DEBUG");
-		
-		//passing the list of categories
-		mv.addObject("categories", categoryDAO.list());
-		
-		mv.addObject("userClickHome",true);
-		return mv;				
+	public ModelAndView index(@RequestParam(name="search",required=false)String query) {		
+		  ModelAndView mv = new ModelAndView("page");		
+	 	  mv.addObject("title","Home");
+	 	    if(query!=null) {
+	 	    	List <Product> products=productDAO.getCategoryProducts(query);
+	 	    	   
+	 	        mv.addObject("mproducts",products);
+	 	          if(products==null || products.size()==0) {
+	 	        	  mv.addObject("emptyMessage","There are No products to display ...");
+	 	          }
+	 	    }
+	 	    else {
+		  mv.addObject("mproducts",productDAO.getLatestTrendingProducts(9));
+		   }
+	 	    logger.info("Inside PageController index method - INFO");
+		  logger.debug("Inside PageController index method - DEBUG");		
+		  //passing the list of categories
+		  mv.addObject("categories", categoryDAO.list());		
+		  mv.addObject("userClickHome",true);
+		  return mv;				
 	}
 	
 	@RequestMapping(value = "/about")
@@ -132,8 +149,35 @@ public class PageController {
 		return mv;				
 	}		
 	
+	@RequestMapping(value = "/login")
+	public ModelAndView Login(@RequestParam(name="error",required=false)String error,@RequestParam(name="logout",required=false)String logout) {
+		 
+		ModelAndView mv = new ModelAndView("login");	
+		  if(error!=null) {
+			 mv.addObject("message","Invalid Username Or Password!");   
+		   }
+		  if(logout!=null) {
+			  mv.addObject("logout","User has logged out successfully..");   
+		  }
+		mv.addObject("title","Login");
+		return mv;				
+	}	
 	
-	
-	
+
+	@RequestMapping(value = "/access-denied")
+	public ModelAndView errorHandler() {		
+		ModelAndView mv = new ModelAndView("error");		
+		mv.addObject("errorTitle","Trying to be oversmart...");
+		mv.addObject("errorDescription","you are not authorized to view this page");
+		return mv;				
+	}	
+	@RequestMapping(value = "/perform-logout")
+	public String logout(HttpServletRequest req, HttpServletResponse res) {		
+		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+		if(auth!=null) {
+		   new SecurityContextLogoutHandler().logout(req, res, auth);	
+		}
+		return "redirect:/login?logout";			
+	}	
 	
 }

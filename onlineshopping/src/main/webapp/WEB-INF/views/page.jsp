@@ -18,7 +18,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="description" content="">
 <meta name="author" content="">
-
+<meta name="_csrf" content="${_csrf.token}">
+<meta name="_csrf_header" content="${_csrf.headerName}">
 <title>Online Shopping - ${title}</title>
 
 <script>
@@ -86,7 +87,11 @@
 			<!-- Load only when user clicks show product -->
 			<c:if test="${userClickShowProduct == true}">
 				<%@include file="singleProduct.jsp"%>
-			</c:if>								
+			</c:if>		
+				<!-- Load only when user clicks show cart -->
+			<c:if test="${userClickShowCart == true}">
+				<%@include file="cart.jsp"%>
+			</c:if>							
 
 			<!-- Load only when user clicks manage products -->
 			<c:if test="${userClickManageProducts == true}">

@@ -14,6 +14,9 @@ $(function() {
 		case 'Manage Products':
 			$('#manageProducts').addClass('active');
 			break;
+		case 'User Cart':
+			$('#userCart').addClass('active');
+			break;
 		default:	
 			if(menu == "Home") break;
 			$('#listProducts').addClass('active');
@@ -21,7 +24,16 @@ $(function() {
 			break;		
 	}
 	
+	var token =$('meta[name="_csrf"]').attr('content');
+	var header =$('meta[name="_csrf_header"]').attr('content');
+	  
 	
+	  if(token.length>0 && header.length >0){
+		  
+		   $(document).ajaxSend(function(e,xhr,options){
+			  xhr.setRequestHeader(header,header); 
+		   });
+	  }
 	// code for jquery dataTable
 
 	
@@ -55,7 +67,7 @@ $(function() {
 			        	  bSortable: false,
 			        	  mRender: function(data, type, row) {
 			        		  
-			        		  return '<img src="'+window.contextRoot+'/resources/images/'+data+'.jpg" class="dataTableImg"/>';
+			        		  return '<img src="'+window.contextRoot+'/resources/images/'+data+'.jpg" class="dataTableImg" />';
 			        		  
 			        	  }
 			          },
@@ -90,15 +102,19 @@ $(function() {
 			        		  
 			        		  var str = '';
 			        		  str += '<a href="'+window.contextRoot+ '/show/'+data+'/product" class="btn btn-primary"><span class="glyphicon glyphicon-eye-open"></span></a> &#160;';
-			        		  
-			        		  if(row.quantity < 1) {
-			        			  str += '<a href="javascript:void(0)" class="btn btn-success disabled"><span class="glyphicon glyphicon-shopping-cart"></span></a>';
-			        		  }
-			        		  else {
-			        			  
-			        			  str += '<a href="'+window.contextRoot+ '/cart/add/'+data+'/product" class="btn btn-success"><span class="glyphicon glyphicon-shopping-cart"></span></a>';  
-			        		  }
-			        		  
+			        		 if(userRole =='ADMIN'){
+			        			 str += '<a href="'+window.contextRoot+'/manage/' +data + '/product" class="btn btn-warning"><span class="glyphicon glyphicon-pencil"></span></a>';
+			        		 } 
+					        		 else{ 
+					        			 
+					        			 if(row.quantity < 1) {
+					        			  str += '<a href="javascript:void(0)" class="btn btn-success disabled"><span class="glyphicon glyphicon-shopping-cart"></span></a>';
+					        		               }
+					        		  else {
+					        			  
+					        			  str += '<a href="'+window.contextRoot+ '/cart/add/'+data+'/product" class="btn btn-success"><span class="glyphicon glyphicon-shopping-cart"></span></a>';  
+					        		  }
+			        		 }
 			        		  			        		  
 			        		  
 			        		  return str;
@@ -292,5 +308,72 @@ $(function() {
 	
 	
 	//-----------------
+	
+	// refreshing the count of the product .
+	$('button[name="refreshCart"]').click(function(){
+		  console.log('yes .. button clicked');
+		var cartLineId= $(this).attr('value');
+		var count= $('#count_'+cartLineId);
+		var originalCount= count.attr('value');
+		var currentCount= count.val();
+		
+		if(currentCount!=originalCount){
+			 
+			 if(currentCount<1 || currentCount>3){
+				 count.val(originalCount);
+			     bootbox.alert({
+	                    size: 'medium',
+	                    title: 'Error',
+	                    message: 'Count of Product should be between 1 to 3'	                   
+	                });
+				 
+			 }
+			 else{
+				 var updateUrl = window.contextRoot + '/cart/' + cartLineId + '/update?count=' + currentCount;
+					// forward it to the controller
+				  console.log('url is '+updateUrl);
+					window.location.href = updateUrl;
+			 }			
+		}
+	});
+	
 
 });
+function triggerVoiceSearch(){
+	var searchBar = $('#searchTextBar');
+	console.log('search bar getting triggered continously');
+	
+	if('webkitSpeechRecognition' in window){
+		var speechRecognizer = new webkitSpeechRecognition();
+		speechRecognizer.continuous = false;
+		speechRecognizer.interimResults = true;
+		speechRecognizer.lang = 'en-IN';
+		speechRecognizer.start();
+		var finalTranscripts = '';
+		speechRecognizer.onresult = function(event){
+			var interimTranscripts = '';
+			for(var i = event.resultIndex; i < event.results.length; i++){
+				var transcript = event.results[i][0].transcript;
+				transcript.replace("\n", "<br>");
+				if(event.results[i].isFinal){
+					finalTranscripts += transcript;
+				}else{
+					interimTranscripts += transcript;
+				}
+			}
+    	    	console.log(finalTranscripts);
+    	    	searchBar.val(finalTranscripts);
+    	               if(searchBar.val()!=''){
+    	            	 $('#searchButton').click();
+    	               }
+    	    }
+      }
+      else {
+    	  console.log('browser not supported.....');
+      }
+		  
+		 
+}
+
+
+	

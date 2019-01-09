@@ -46,7 +46,7 @@ public class ManagementController {
 		mv.addObject("title", "Manage Products");
 		Product nProduct = new Product();
 		// set few of the fields
-		nProduct.setSupplierId(1);
+		nProduct.setSupplierId(6);
 		nProduct.setActive(true);		
 		mv.addObject("product", nProduct);
 		if(operation!=null) {

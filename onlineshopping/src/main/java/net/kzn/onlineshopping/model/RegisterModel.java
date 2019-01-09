@@ -25,7 +25,5 @@ public class RegisterModel implements Serializable {
 	public void setBilling(Address billing) {
 		this.billing = billing;
 	}
-	
-	
-	
+
 }

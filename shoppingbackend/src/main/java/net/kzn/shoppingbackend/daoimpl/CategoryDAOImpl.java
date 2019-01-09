@@ -29,6 +29,23 @@ public class CategoryDAOImpl implements CategoryDAO {
 						
 		return query.getResultList();
 	}
+	@Override
+	public Category getCategoryByName(String name) {
+		
+		String selectActiveCategory = "FROM Category WHERE name = :name";
+		
+		Query query = sessionFactory.getCurrentSession().createQuery(selectActiveCategory);
+				
+		query.setParameter("name", name);
+			try {			
+		Category category= (Category)query.getSingleResult();
+			   return category;
+			}
+			catch(Exception ex) {
+		//		ex.printStackTrace();
+				return null;
+			}
+	}
 
 	/*
 	 * Getting single category based on id
